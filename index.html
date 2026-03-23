@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Living World — Live Q&A</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --soil:   #1a1409;
+    --bark:   #2c1f0e;
+    --moss:   #2d3b1e;
+    --fern:   #3d5426;
+    --leaf:   #5a7a35;
+    --sprout: #8ab84a;
+    --lichen: #b5c97a;
+    --cream:  #f0ead8;
+    --sand:   #e2d9c0;
+    --fog:    #c8c2ad;
+    --mist:   #96917f;
+    --spore:  #d4b96a;
+    --algae:  #4a8060;
+    --water:  #2e6e7a;
+    --sky:    #a8d4da;
+    --radius: 2px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--soil);
+    color: var(--cream);
+    font-family: 'Courier Prime', monospace;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 10% 15%, rgba(90,122,53,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 85%, rgba(46,110,122,0.10) 0%, transparent 55%),
+      url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='60' cy='60' r='58' stroke='%235a7a35' stroke-width='.3' stroke-opacity='.08'/%3E%3Cline x1='60' y1='2' x2='60' y2='118' stroke='%235a7a35' stroke-width='.2' stroke-opacity='.05'/%3E%3Cline x1='2' y1='60' x2='118' y2='60' stroke='%235a7a35' stroke-width='.2' stroke-opacity='.05'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* SETUP */
+  #setup-screen { display: none; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
+  .setup-card {
+    background: var(--bark);
+    border: 1px solid var(--fern);
+    border-radius: var(--radius);
+    padding: 3rem;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 0 0 1px var(--moss), 16px 16px 0 var(--soil);
+    animation: riseUp .6s cubic-bezier(.22,1,.36,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .setup-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--fern), var(--sprout), var(--spore), var(--algae));
+  }
+  .setup-eyebrow {
+    font-size: .7rem; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--sprout); margin-bottom: 1.25rem;
+  }
+  .setup-card h1 {
+    font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 700;
+    line-height: 1.1; margin-bottom: .5rem; color: var(--cream);
+  }
+  .setup-card h1 em {
+    font-style: italic; font-weight: 300; color: var(--lichen);
+    display: block; font-size: 2rem;
+  }
+  .setup-tag {
+    display: inline-block; background: rgba(90,122,53,0.15); color: var(--sprout);
+    font-size: .68rem; padding: .2rem .65rem; border: 1px solid rgba(90,122,53,0.35);
+    border-radius: 99px; margin-bottom: 2rem; letter-spacing: .1em;
+  }
+  .field-group { margin-bottom: 1.25rem; }
+  .field-group label {
+    display: block; font-size: .68rem; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--mist); margin-bottom: .4rem;
+  }
+  .field-group input {
+    width: 100%; padding: .7rem 1rem; background: var(--soil);
+    border: 1px solid var(--moss); border-radius: var(--radius);
+    font-family: 'Courier Prime', monospace; font-size: .95rem;
+    color: var(--cream); transition: border-color .2s;
+  }
+  .field-group input:focus { outline: none; border-color: var(--sprout); }
+  .field-group input::placeholder { color: var(--mist); opacity: .5; }
+  .role-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: 1.5rem; }
+  .role-btn {
+    padding: .7rem; border: 1px solid var(--moss); border-radius: var(--radius);
+    background: transparent; cursor: pointer; font-family: 'Courier Prime', monospace;
+    font-size: .88rem; transition: all .2s; color: var(--fog);
+  }
+  .role-btn.active { background: var(--fern); color: var(--cream); border-color: var(--sprout); }
+  .btn-primary {
+    width: 100%; padding: .9rem;
+    background: linear-gradient(135deg, var(--fern), var(--algae));
+    color: var(--cream); border: none; border-radius: var(--radius);
+    font-family: 'Courier Prime', monospace; font-weight: 700; font-size: .9rem;
+    cursor: pointer; transition: all .18s; letter-spacing: .06em;
+  }
+  .btn-primary:hover { opacity: .85; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(90,122,53,0.3); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  /* APP SHELL */
+  #app { display: none; }
+  .app-header {
+    background: var(--bark); padding: .9rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    border-bottom: 1px solid var(--moss); box-shadow: 0 2px 20px rgba(0,0,0,.4);
+  }
+  .app-header h2 {
+    font-family: 'Fraunces', serif; font-size: .95rem; font-weight: 600;
+    color: var(--cream); display: flex; align-items: center; gap: .6rem;
+  }
+  .app-header h2 span { color: var(--lichen); }
+  .header-meta { display: flex; align-items: center; gap: .75rem; }
+  .session-badge {
+    background: rgba(90,122,53,0.15); color: var(--sprout); padding: .2rem .7rem;
+    border-radius: 99px; font-size: .7rem; border: 1px solid rgba(90,122,53,0.3); letter-spacing: .06em;
+  }
+  .user-badge {
+    background: linear-gradient(135deg, var(--fern), var(--algae));
+    color: var(--cream); padding: .2rem .75rem; border-radius: 99px; font-size: .78rem; font-weight: 700;
+  }
+  .app-body { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* QUESTION BLOCK */
+  .question-header {
+    background: var(--bark); border: 1px solid var(--moss);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 1.75rem 2rem; display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 1rem; position: relative; overflow: hidden;
+  }
+  .question-header::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--fern), var(--sprout), var(--spore));
+  }
+  .q-number {
+    font-size: .68rem; letter-spacing: .2em; color: var(--sprout);
+    margin-bottom: .5rem; text-transform: uppercase;
+  }
+  .q-text {
+    font-family: 'Fraunces', serif; font-size: 1.3rem; line-height: 1.5;
+    color: var(--cream); flex: 1; white-space: pre-wrap;
+  }
+  .q-progress { font-size: .75rem; color: var(--mist); white-space: nowrap; padding-top: .25rem; opacity: .6; }
+  .answer-section {
+    background: var(--moss); border: 1px solid var(--fern); border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius); padding: 1.5rem 2rem; margin-bottom: 1rem;
+  }
+  .my-answer-area { margin-bottom: 1.5rem; }
+  .my-answer-area label {
+    font-size: .68rem; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--lichen); display: block; margin-bottom: .6rem;
+  }
+  .my-answer-area textarea {
+    width: 100%; min-height: 95px; padding: .8rem 1rem; background: var(--soil);
+    border: 1px solid var(--fern); border-radius: var(--radius);
+    font-family: 'Courier Prime', monospace; font-size: .92rem; color: var(--cream);
+    resize: vertical; transition: border-color .2s;
+  }
+  .my-answer-area textarea:focus { outline: none; border-color: var(--sprout); }
+  .my-answer-area textarea:disabled { opacity: .5; cursor: not-allowed; }
+  .my-answer-area textarea::placeholder { color: var(--mist); opacity: .5; }
+  .answer-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+  .btn-submit {
+    padding: .6rem 1.5rem;
+    background: linear-gradient(135deg, var(--fern), var(--algae));
+    color: var(--cream); border: none; border-radius: var(--radius);
+    font-family: 'Courier Prime', monospace; font-weight: 700; font-size: .82rem;
+    cursor: pointer; transition: all .15s; letter-spacing: .04em;
+  }
+  .btn-submit:hover { opacity: .82; transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  .btn-outline {
+    padding: .6rem 1.25rem; background: transparent; color: var(--fog);
+    border: 1px solid var(--fern); border-radius: var(--radius);
+    font-family: 'Courier Prime', monospace; cursor: pointer; transition: all .15s; font-size: .82rem;
+  }
+  .btn-outline:hover { border-color: var(--sprout); color: var(--lichen); }
+  .divider { border: none; border-top: 1px dashed var(--fern); margin: 1.25rem 0; opacity: .5; }
+  .responses-label {
+    font-size: .68rem; letter-spacing: .15em; text-transform: uppercase; color: var(--lichen);
+    margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem;
+  }
+  .response-count {
+    background: var(--fern); color: var(--lichen); font-size: .68rem; padding: .1rem .5rem; border-radius: 99px;
+  }
+  .responses-list { display: flex; flex-direction: column; gap: .75rem; }
+  .response-card {
+    background: var(--bark); border-radius: var(--radius); padding: 1rem 1.25rem;
+    border-left: 3px solid var(--fern); animation: fadeLeaf .35s ease;
+  }
+  .response-card.mine { border-left-color: var(--sprout); background: rgba(90,122,53,0.12); }
+  .response-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: .4rem; }
+  .response-name { font-weight: 700; font-size: .8rem; color: var(--fog); }
+  .response-name.mine-label { color: var(--sprout); }
+  .response-time { font-size: .7rem; color: var(--mist); }
+  .response-text { font-size: .92rem; line-height: 1.7; color: var(--cream); }
+  .no-responses { color: var(--mist); font-style: italic; font-size: .88rem; text-align: center; padding: 1rem 0; }
+
+  /* REVEAL */
+  .reveal-card {
+    background: var(--bark); border: 1px solid var(--algae); border-radius: var(--radius);
+    padding: 1.75rem 2rem; margin-bottom: 2rem;
+    animation: bloomIn .6s cubic-bezier(.175,.885,.32,1.275); position: relative; overflow: hidden;
+  }
+  .reveal-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--algae), var(--spore), var(--sprout));
+  }
+  .reveal-label {
+    display: flex; align-items: center; gap: .5rem; font-size: .68rem;
+    letter-spacing: .15em; text-transform: uppercase; color: var(--algae); margin-bottom: .85rem;
+  }
+  .reveal-title { font-family: 'Fraunces', serif; font-size: 1.2rem; margin-bottom: .65rem; color: var(--cream); }
+  .reveal-body { font-size: .92rem; line-height: 1.8; color: var(--fog); white-space: pre-wrap; margin-bottom: .75rem; }
+  .reveal-images { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: .75rem; }
+  .reveal-img-wrap { flex: 1 1 260px; max-width: 100%; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--moss); }
+  .reveal-img-wrap img { width: 100%; display: block; object-fit: cover; max-height: 300px; }
+  .reveal-img-caption { font-size: .76rem; color: var(--mist); padding: .35rem .6rem; background: var(--soil); }
+  .q-image-wrap { margin: .75rem 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--moss); }
+  .q-image-wrap img { width: 100%; display: block; max-height: 520px; object-fit: contain; background: var(--soil); }
+
+  /* PREV QUESTIONS */
+  .prev-questions { margin-top: .5rem; }
+  .prev-questions h3 {
+    font-family: 'Fraunces', serif; font-size: .95rem; font-style: italic; font-weight: 300;
+    margin-bottom: 1rem; color: var(--mist); letter-spacing: .02em;
+  }
+  .prev-q-card { border: 1px solid var(--moss); border-radius: var(--radius); margin-bottom: .75rem; overflow: hidden; }
+  .prev-q-header {
+    background: var(--bark); padding: .85rem 1.25rem; display: flex;
+    justify-content: space-between; align-items: center; cursor: pointer;
+    user-select: none; transition: background .15s;
+  }
+  .prev-q-header:hover { background: var(--moss); }
+  .prev-q-title { font-size: .85rem; flex: 1; margin-right: 1rem; color: var(--fog); }
+  .prev-q-toggle { font-size: .72rem; color: var(--mist); white-space: nowrap; }
+  .prev-q-body { padding: 1.25rem; display: none; background: var(--soil); }
+  .prev-q-body.open { display: block; }
+  .catchup-area { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--moss); }
+  .catchup-area label {
+    font-size: .68rem; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--algae); display: block; margin-bottom: .5rem;
+  }
+  .catchup-area textarea {
+    width: 100%; min-height: 75px; padding: .65rem .9rem; background: var(--bark);
+    border: 1px solid var(--moss); border-radius: var(--radius);
+    font-family: 'Courier Prime', monospace; font-size: .9rem; color: var(--cream);
+    resize: vertical; transition: border-color .2s;
+  }
+  .catchup-area textarea:focus { outline: none; border-color: var(--sprout); }
+  .catchup-area textarea:disabled { opacity: .5; cursor: not-allowed; }
+  .catchup-submitted { font-size: .85rem; color: var(--sprout); font-weight: 700; margin-top: .5rem; }
+
+  /* ADMIN */
+  .admin-panel {
+    background: var(--bark); border: 1px solid var(--fern); border-left: 4px solid var(--spore);
+    border-radius: var(--radius); padding: 1.25rem 1.75rem; margin-bottom: 1rem;
+  }
+  .admin-panel h3 {
+    font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; color: var(--spore); margin-bottom: 1rem;
+  }
+  .admin-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+  .btn-admin {
+    padding: .55rem 1.2rem; background: rgba(255,255,255,.05); color: var(--fog);
+    border: 1px solid var(--moss); border-radius: var(--radius);
+    font-family: 'Courier Prime', monospace; cursor: pointer; transition: all .15s; font-size: .85rem;
+  }
+  .btn-admin:hover { background: rgba(255,255,255,.12); border-color: var(--fern); }
+  .btn-admin.danger { border-color: rgba(180,60,60,.4); color: #e08080; }
+  .btn-admin.danger:hover { background: rgba(180,60,60,.15); }
+  .btn-admin.advance {
+    background: linear-gradient(135deg, var(--fern), var(--algae));
+    color: var(--cream); border-color: transparent; font-weight: 700;
+  }
+  .btn-admin.advance:hover { opacity: .82; }
+  .student-panel {
+    background: var(--bark); border: 1px solid var(--moss); border-radius: var(--radius);
+    padding: .9rem 1.5rem; margin-bottom: 1.75rem; display: flex;
+    align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
+  }
+  .student-panel-label { font-size: .68rem; letter-spacing: .15em; text-transform: uppercase; color: var(--mist); }
+  .student-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .btn-student-export {
+    padding: .45rem 1rem; background: transparent; color: var(--fog);
+    border: 1px solid var(--moss); border-radius: var(--radius);
+    font-family: 'Courier Prime', monospace; font-size: .82rem; cursor: pointer; transition: all .15s;
+  }
+  .btn-student-export:hover { border-color: var(--sprout); color: var(--lichen); }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 2rem; left: 50%;
+    transform: translateX(-50%) translateY(4rem);
+    background: var(--fern); color: var(--cream); padding: .7rem 1.5rem;
+    border-radius: 99px; font-size: .85rem; font-family: 'Courier Prime', monospace;
+    transition: transform .3s ease; z-index: 9999; pointer-events: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,.4); border: 1px solid var(--sprout);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bark); border: 1px solid var(--fern); border-radius: var(--radius);
+    padding: 2rem; max-width: 420px; width: 90%;
+    box-shadow: 12px 12px 0 var(--soil); animation: riseUp .2s ease;
+  }
+  .modal h3 { font-family: 'Fraunces', serif; font-size: 1.15rem; margin-bottom: .5rem; color: var(--cream); }
+  .modal p { color: var(--mist); margin-bottom: 1.25rem; font-size: .88rem; }
+  .modal input {
+    width: 100%; padding: .7rem 1rem; background: var(--soil); border: 1px solid var(--moss);
+    border-radius: var(--radius); font-family: 'Courier Prime', monospace;
+    color: var(--cream); margin-bottom: 1rem; font-size: .95rem;
+  }
+  .modal input:focus { outline: none; border-color: var(--sprout); }
+  .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+  .btn-cancel {
+    padding: .6rem 1.25rem; background: transparent; border: 1px solid var(--moss);
+    border-radius: var(--radius); cursor: pointer; font-family: 'Courier Prime', monospace; color: var(--fog);
+  }
+  .btn-confirm {
+    padding: .6rem 1.25rem; background: linear-gradient(135deg, var(--fern), var(--algae));
+    color: var(--cream); border: none; border-radius: var(--radius);
+    cursor: pointer; font-family: 'Courier Prime', monospace; font-weight: 700; font-size: .82rem;
+  }
+
+  @keyframes riseUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeLeaf { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes bloomIn { from { opacity:0; transform:scale(.96) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+
+  @media (max-width:600px) {
+    .setup-card { padding: 2rem 1.5rem; }
+    .app-header { flex-direction: column; gap: .5rem; align-items: flex-start; }
+    .question-header { flex-direction: column; }
+    .answer-section, .reveal-card { padding: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-eyebrow">// ART 104 — Module 05</div>
+    <h1>The Living<br><em>World</em></h1>
+    <div class="setup-tag">⬡ LIVE SESSION Q&amp;A</div>
+    <div class="field-group">
+      <label>Session ID</label>
+      <input type="text" id="session-id" placeholder="e.g. ecology-101" value="ecology-1">
+    </div>
+    <div class="field-group">
+      <label>Your Name</label>
+      <input type="text" id="user-name" placeholder="e.g. Moss Calloway">
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--mist);margin-bottom:.5rem">Join as</label>
+      <div class="role-toggle">
+        <button class="role-btn active" onclick="selectRole('student',this)">Student</button>
+        <button class="role-btn" onclick="selectRole('admin',this)">Admin</button>
+      </div>
+    </div>
+    <div id="admin-code-field" class="field-group" style="display:none">
+      <label>Admin Code</label>
+      <input type="password" id="admin-code-input" placeholder="Enter admin code">
+    </div>
+    <button class="btn-primary" id="join-btn" onclick="joinSession()">Enter Session →</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="app-header">
+    <h2>◈ The Living <span>World</span></h2>
+    <div class="header-meta">
+      <span class="session-badge" id="header-session"></span>
+      <span class="user-badge" id="header-user"></span>
+    </div>
+  </div>
+  <div class="app-body">
+    <div class="admin-panel" id="admin-panel" style="display:none">
+      <h3>// Admin Controls</h3>
+      <div class="admin-actions">
+        <button class="btn-admin advance" onclick="advanceQuestion()">▶ Next Question</button>
+        <button class="btn-admin" onclick="exportAllPDF()">⬇ Export All (PDF)</button>
+        <button class="btn-admin" onclick="exportByStudentPDF()">⬇ By Student (PDF)</button>
+        <button class="btn-admin danger" onclick="confirmReset()">✕ Reset All</button>
+      </div>
+    </div>
+    <div class="student-panel" id="student-panel" style="display:none">
+      <span class="student-panel-label">⬇ Export Answers</span>
+      <div class="student-actions">
+        <button class="btn-student-export" onclick="exportMyAnswersPDF()">My Answers (PDF)</button>
+        <button class="btn-student-export" onclick="exportClassAnswersPDF()">All Class Answers (PDF)</button>
+      </div>
+    </div>
+    <div id="reveal-zone"></div>
+    <div id="main-question-block"></div>
+    <div id="prev-questions-block"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- CONFIRM MODAL -->
+<div id="confirm-modal" class="modal-overlay">
+  <div class="modal">
+    <h3 id="confirm-title">Confirm Action</h3>
+    <p id="confirm-msg">Are you sure?</p>
+    <input type="password" id="confirm-code" placeholder="Enter admin code to confirm">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" id="confirm-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script type="module">
+const QUESTIONS = [
+
+  // ── OPENING: WHAT IS NATURE? ───────────────────────────────────────────────
+  {
+    text: "What does the word \"nature\" mean to you? Does your definition include only living things — or also rocks, weather, rivers, and the atmosphere? Where does nature begin, and does it include humans?",
+    reveal: null
+  },
+  {
+    text: "List all the ways you interacted with the natural world today — with living things AND non-living ones (sunlight, wind, water, soil, stone). Which of these felt significant to you, and which went completely unnoticed?",
+    reveal: null
+  },
+
+  // ── THE DIGITAL & THE PHYSICAL ────────────────────────────────────────────
+  {
+    text: "Is a digitally rendered landscape — a photorealistic canyon, ocean, or glacier — as meaningful as a physical one? Where does the line between real environment and simulated environment blur for you?",
+    reveal: null
+  },
+  {
+    text: "What does it mean for the internet to have an ecology? Think about energy, heat, water for cooling data centers, waste, infrastructure, and the rare earth minerals — cobalt, tantalum, neodymium — extracted from the Earth's crust to make your devices.",
+    reveal: {
+      title: "The Hidden Ecology of Digital Media",
+      body: "Data centers consume roughly 1–2% of global electricity. A single internet search uses approximately 0.3 Wh of energy. The rare earth minerals in your phone are extracted from ecosystems in the Congo, Chile, and Indonesia — landscapes permanently altered by mining.\n\nArtist Tega Brain asks: what would it look like to make this invisible infrastructure visible?\n\nBrain's Asunder (2019) used aerial imaging and algorithmic systems to expose the ecological contradictions embedded in infrastructure and land management decisions.\n\nThe digital world runs on geology — on ancient minerals formed over millions of years."
+    }
+  },
+
+  // ── GEOLOGY, ATMOSPHERE & NON-LIVING NATURE ──────────────────────────────
+  {
+    text: "How do we know what we know about geological time — the deep history of the Earth before life, the formation of mountains, the movement of tectonic plates? What role does digital technology (satellite imaging, remote sensing, modeling) play in making deep time visible?",
+    reveal: null
+  },
+  {
+    text: "Weather, climate, and atmosphere are non-living systems that sustain all life. How do digital tools — sensors, models, satellite data — change our relationship to weather? Does knowing a storm is coming three days in advance change how it feels when it arrives?",
+    reveal: null
+  },
+  {
+    text: "What would a \"deepfake\" of an environment look like? If satellite imagery of glaciers, forests, or ocean temperatures can be manipulated or misrepresented, how does that affect climate science, journalism, and public trust?",
+    reveal: null
+  },
+
+  // ── BIOINFORMATICS & THE CODE OF LIFE ────────────────────────────────────
+  {
+    text: "What is bioinformatics? How might the ability to read and write DNA — like computer code — change how we understand what \"life\" means? Is there anything about a living organism that cannot be captured in data?",
+    reveal: {
+      title: "Eduardo Kac — Genesis (1999)",
+      body: "Kac translated a biblical verse into Morse code, converted it to DNA base pairs, and inserted it into living bacteria. Visitors to the gallery could mutate the gene via UV light over the internet — and the mutated DNA was translated back into language.\n\nThe bacteria became a living, writable text.\n\nWhat are the ethical implications of treating DNA as data? Who owns the code of life?"
+    }
+  },
+  {
+    text: "Can AI-generated images of nature — photorealistic animals, landscapes, geological formations, or weather events that have never existed — distort our sense of what the real natural world looks like? Describe a specific example.",
+    reveal: null
+  },
+
+  // ── ARTIFICIAL LIFE & SIMULATION ─────────────────────────────────────────
+  {
+    text: "Karl Sims created virtual creatures that evolved through natural selection. Refik Anadol trained AI on millions of images of nature to generate living visualizations. Do you think these systems are \"alive\" in any meaningful sense — and does it matter?",
+    reveal: {
+      title: "Artificial Life & Generative Ecosystems",
+      body: "Karl Sims's Galapagos (1997): museum visitors selected which virtual creatures survived and reproduced, simulating evolution in real time. The creatures competed for computational resources like organisms competing for energy.\n\nRefik Anadol's Large Nature Model (2024): a generative AI trained on vast biodiversity datasets — producing immersive, continuously evolving visualizations of Earth's ecosystems.\n\nBoth raise the question: when does a simulation become an ecology? Can code have a life cycle?"
+    }
+  },
+  {
+    text: "What is the difference between Virtual Nature (a rendered forest or canyon), Augmented Nature (overlaying species data or geological history on a real trail), and a real environment? Which carries the most meaning for you — and why?",
+    reveal: null
+  },
+  {
+    text: "Imagine spending 8 hours a day in a fully immersive virtual environment — a forest, a glacier, a coral reef, a desert at night. Does this generate genuine ecological or environmental consciousness? Or is something irreplaceable lost without physical presence?",
+    reveal: {
+      title: "Char Davies — Ephémère (1998)",
+      body: "Davies created a breath-controlled VR environment of roots, seeds, rocks, and dissolving landscapes. Participants navigated by breathing and tilting their body weight — the body itself became the interface.\n\nThe work asked: can a virtual ecology create real ecological feeling? Does it matter if the plants aren't biologically alive — or if the rocks aren't geological?\n\nSommerer & Mignonneau's A-Volve (1994–95) used microscopic-scale logic to render evolutionary creatures in a water-filled pool, their forms shaped by visitor touch and biological growth rules."
+    }
+  },
+
+  // ── ALGORITHMS & THE MEDIATED NATURAL WORLD ──────────────────────────────
+  {
+    text: "How do algorithms decide what version of \"nature\" you see online? What gets amplified — pristine wildlife photography, dramatic weather, crisis imagery, rewilding success stories — and what disappears?",
+    reveal: null
+  },
+  {
+    text: "What is an \"ecological echo chamber\"? Has your sense of the natural world — its health, its beauty, its precarity — ever been shaped by a curated feed? How might that distort your understanding of environments you've never physically visited?",
+    reveal: null
+  },
+
+  // ── INTERSPECIES, SENSING & REMOTE ECOLOGIES ─────────────────────────────
+  {
+    text: "What would genuine communication across the boundary between humans and non-human nature look like through technology — whether that's an animal, a plant, a river, or a glacier? Eduardo Kac put visitors inside a telerobotic bird's body. Sommerer & Mignonneau let people grow virtual plants by touching real ones. Are these forms of genuine connection — or sophisticated simulation?",
+    reveal: {
+      title: "Interspecies Communication & the Post-human",
+      body: "Eduardo Kac's Rara Avis (1996): visitors wore a VR headset and inhabited the perspective of a telerobotic macaw — experiencing a bird aviary from a nonhuman point of view via a live camera mounted in the robot's head.\n\nSommerer & Mignonneau's Interactive Plant Growing (1992): touching real plants generated bioelectric field signals that caused virtual plant simulations to grow on screen. The human body became the bridge between organisms.\n\nCan empathy traverse the boundary between human consciousness and non-human nature — living or non-living — through digital mediation?"
+    }
+  },
+  {
+    text: "Natalie Jeremijenko planted cloned trees as living environmental sensors. Ken Goldberg let thousands of internet users tend a real garden through a robot. What do these projects reveal about collective responsibility toward both living nature and the environments — soil, water, air — those lives depend on?",
+    reveal: {
+      title: "Activist & Dialogic Ecological Practices",
+      body: "Jeremijenko's OneTrees (1999–2006): genetically identical trees planted in different neighborhoods showed dramatically different growth — making environmental inequality visible through biology itself. The trees were a data visualization made of living organisms.\n\nGoldberg's Telegarden (1995–2004): online participants planted seeds and watered a real garden using a robotic arm — one of the earliest internet-based collaborative living systems, with thousands of participants over nine years.\n\nHow can art make ecological systems — and the non-living substrates that support them — legible as social and political systems?"
+    }
+  },
+
+  // ── BIOTECH & THE BOUNDARY OF LIFE ───────────────────────────────────────
+  {
+    text: "CRISPR allows scientists to rewrite the genetic code of any living organism. Synthetic biology lets us design organisms that have never existed in nature. Who should have the authority to edit life — and what counts as \"natural\" after that threshold is crossed?",
+    reveal: {
+      title: "Biotech, Genetics & the Control of Life",
+      body: "Critical Art Ensemble's Genterra (2002): staged public performances critiquing the biotech industry's control over genetically modified organisms and the food supply — asking who profits when life becomes intellectual property.\n\nOron Catts & Ionat Zurr (Tissue Culture & Art Project): grew semi-living sculptures from animal tissue in laboratory conditions, asking whether engineered biological matter constitutes a new form of life — and whether it deserves ethical consideration.\n\nThe question is no longer whether we can edit life. It is who gets to decide, and toward what ends."
+    }
+  },
+
+  // ── DEEP TIME & THE SCALE OF NATURE ─────────────────────────────────────
+  {
+    text: "The universe is approximately 13.8 billion years old. Earth formed 4.5 billion years ago. The first life appeared roughly 3.8 billion years ago. Humans have existed for about 300,000 years. How does confronting deep time — geological, cosmic, evolutionary — change your relationship to both the living world and the non-living systems that surround it?",
+    reveal: null
+  },
+  {
+    text: "Water covers 71% of the Earth's surface and flows through every living system. It is not alive — but nothing alive can exist without it. Mineral cycles, atmospheric chemistry, ocean currents — these non-living processes shape all life on Earth. How should we think about our relationship to non-living nature? Does it deserve moral consideration?",
+    reveal: null
+  },
+
+  // ── SYNTHESIS ─────────────────────────────────────────────────────────────
+  {
+    text: "Reflect on everything discussed today. In one sentence: What IS nature — living and non-living — and what responsibility does working with digital media give us toward it?",
+    reveal: null
+  },
+];
+
+const ADMIN_CODE = "admin123";
+
+let db, sessionRef;
+let sessionId, userName, isAdmin = false;
+let currentQuestionIndex = 0;
+let allAnswers = {};
+const runtimeImages = {};
+
+(async () => {
+  try {
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const fs = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const cfg = {
+      apiKey: "AIzaSyCqLvPickUwIY2M5CQRfrndkUKwrOVSY1M",
+      authDomain: "art104-nature-interactive-lect.firebaseapp.com",
+      databaseURL: "https://art104-nature-interactive-lect-default-rtdb.firebaseio.com",
+      projectId: "art104-nature-interactive-lect",
+      storageBucket: "art104-nature-interactive-lect.firebasestorage.app",
+      messagingSenderId: "27298236678",
+      appId: "1:27298236678:web:7113d481f512e8c66d3687",
+      measurementId: "G-J9JEE4W3W3"
+    };
+    initializeApp(cfg);
+    db = fs.getFirestore();
+    window._fs = fs;
+    document.getElementById('setup-screen').style.display = 'flex';
+  } catch(err) {
+    alert('Firebase failed to load: ' + err.message);
+  }
+})();
+
+let selectedRole = 'student';
+window.selectRole = (role, btn) => {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('admin-code-field').style.display = role === 'admin' ? 'block' : 'none';
+};
+
+window.joinSession = async () => {
+  const sId = document.getElementById('session-id').value.trim();
+  const uName = document.getElementById('user-name').value.trim();
+  if (!sId || !uName) return showToast('Please fill in all fields');
+  if (selectedRole === 'admin') {
+    if (document.getElementById('admin-code-input').value !== ADMIN_CODE) return showToast('Incorrect admin code');
+    isAdmin = true;
+  }
+  const btn = document.getElementById('join-btn');
+  btn.disabled = true; btn.textContent = 'Joining…';
+  sessionId = sId; userName = uName;
+  const { doc, setDoc, getDoc, serverTimestamp } = window._fs;
+  sessionRef = doc(db, 'sessions', sessionId);
+  const snap = await getDoc(sessionRef);
+  if (!snap.exists()) await setDoc(sessionRef, { currentQuestion: 0, createdAt: serverTimestamp() });
+  await setDoc(doc(db, 'sessions', sessionId, 'users', userName), { name: userName, joinedAt: serverTimestamp() }, { merge: true });
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('header-session').textContent = '⬡ ' + sessionId;
+  document.getElementById('header-user').textContent = isAdmin ? '▲ ' + userName : '◈ ' + userName;
+  if (isAdmin) document.getElementById('admin-panel').style.display = 'block';
+  document.getElementById('student-panel').style.display = 'flex';
+  startListening();
+};
+
+let prevIdx = -1;
+function startListening() {
+  const { onSnapshot, collection } = window._fs;
+  onSnapshot(sessionRef, snap => {
+    if (!snap.exists()) return;
+    const newIdx = snap.data().currentQuestion || 0;
+    const didAdvance = newIdx > prevIdx && prevIdx >= 0;
+    prevIdx = newIdx;
+    currentQuestionIndex = newIdx;
+    renderCurrentQuestion();
+    renderPreviousQuestions();
+    if (didAdvance) renderRevealZone(currentQuestionIndex - 1);
+    else if (prevIdx === 0) document.getElementById('reveal-zone').innerHTML = '';
+  });
+  onSnapshot(collection(db, 'sessions', sessionId, 'answers'), snap => {
+    allAnswers = {};
+    snap.forEach(d => { allAnswers[d.id] = d.data(); });
+    renderCurrentQuestion();
+    renderPreviousQuestions();
+  });
+}
+
+function renderCurrentQuestion() {
+  const block = document.getElementById('main-question-block');
+  if (currentQuestionIndex >= QUESTIONS.length) {
+    block.innerHTML = `<div style="text-align:center;padding:4rem 2rem">
+      <h2 style="font-family:'Fraunces',serif;font-size:2rem;font-style:italic;font-weight:300;margin-bottom:.75rem;color:var(--lichen)">Session Complete</h2>
+      <p style="color:var(--mist)">Thank you for exploring the living world.</p></div>`;
+    return;
+  }
+  const qObj = QUESTIONS[currentQuestionIndex];
+  const myKey = `q${currentQuestionIndex}_${userName}`;
+  const myAnswer = allAnswers[myKey];
+  const responses = getResponsesForQ(currentQuestionIndex);
+  block.innerHTML = `
+    <div class="question-header">
+      <div>
+        <div class="q-number">// QUESTION_${String(currentQuestionIndex + 1).padStart(2,'0')}</div>
+        <div class="q-text">${esc(qObj.text)}</div>
+      </div>
+      <div class="q-progress">${currentQuestionIndex + 1} / ${QUESTIONS.length}</div>
+    </div>
+    <div class="answer-section">
+      <div class="my-answer-area">
+        <label>Your Response</label>
+        <textarea id="my-answer-ta" placeholder="Type your answer here…" ${myAnswer ? 'disabled' : ''}>${myAnswer ? esc(myAnswer.text) : ''}</textarea>
+      </div>
+      <div class="answer-actions">
+        <button class="btn-submit" onclick="submitAnswer()" ${myAnswer ? 'disabled' : ''}>${myAnswer ? '✓ Submitted' : 'Submit Answer'}</button>
+        ${myAnswer ? `<button class="btn-outline" onclick="editAnswer()">Edit</button>` : ''}
+      </div>
+      <hr class="divider">
+      <div class="responses-label">Class Responses <span class="response-count">${responses.length}</span></div>
+      <div class="responses-list">
+        ${responses.length === 0 ? '<div class="no-responses">No responses yet — be the first.</div>' : responses.map(responseCard).join('')}
+      </div>
+    </div>`;
+}
+
+function renderRevealZone(qIndex) {
+  const zone = document.getElementById('reveal-zone');
+  const html = buildRevealHtml(qIndex);
+  zone.innerHTML = html;
+  if (html) zone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+const MAX_Q_IMAGES = 10;
+function qImageSrcs(qIndex) {
+  const num = String(qIndex + 1).padStart(2, '0');
+  const srcs = [];
+  for (let i = 1; i <= MAX_Q_IMAGES; i++) srcs.push(`images/q${num}image_${i}.png`);
+  return srcs;
+}
+
+function buildRevealHtml(qIndex) {
+  const qObj = QUESTIONS[qIndex];
+  if (!qObj) return '';
+  const r = qObj.reveal;
+  const extra = runtimeImages[qIndex] || [];
+  const extraConfigImgs = r?.images || [];
+  const primaryImgsHtml = qImageSrcs(qIndex).map((src, i) => `
+    <div class="q-image-wrap" id="qimg-${qIndex}-${i+1}">
+      <img src="${src}" alt="Q${qIndex+1} image ${i+1}" onerror="this.closest('.q-image-wrap').style.display='none'">
+    </div>`).join('');
+  const allExtra = [...extraConfigImgs, ...extra];
+  const extraImgsHtml = allExtra.length ? `
+    <div class="reveal-images">
+      ${allExtra.map(img => `
+        <div class="reveal-img-wrap">
+          <img src="${esc(img.src)}" alt="${esc(img.caption||'Image')}" onerror="this.parentElement.style.display='none'">
+          ${img.caption ? `<div class="reveal-img-caption">${esc(img.caption)}</div>` : ''}
+        </div>`).join('')}
+    </div>` : '';
+  const hasRevealText = r && (r.title || r.body);
+  if (!hasRevealText && !extraImgsHtml) return `<div class="reveal-card" style="display:none">${primaryImgsHtml}</div>`;
+  return `
+    <div class="reveal-card">
+      ${hasRevealText ? `<div class="reveal-label"><span>◈</span> Instructor Reveal</div>` : ''}
+      ${r?.title ? `<div class="reveal-title">${esc(r.title)}</div>` : ''}
+      ${r?.body ? `<div class="reveal-body">${esc(r.body)}</div>` : ''}
+      ${primaryImgsHtml}
+      ${extraImgsHtml}
+    </div>`;
+}
+
+function renderPreviousQuestions() {
+  const block = document.getElementById('prev-questions-block');
+  if (currentQuestionIndex === 0) { block.innerHTML = ''; return; }
+  let html = '<div class="prev-questions"><h3>// Previous Questions</h3>';
+  for (let i = currentQuestionIndex - 1; i >= 0; i--) {
+    const responses = getResponsesForQ(i);
+    const qText = QUESTIONS[i].text;
+    const hasReveal = !!QUESTIONS[i].reveal;
+    const myAnswer = allAnswers[`q${i}_${userName}`];
+    const missedBadge = !myAnswer && !isAdmin ? ' · <span style="color:var(--sprout);font-weight:700">✎ needs answer</span>' : '';
+    let catchupHtml = '';
+    if (!isAdmin && !myAnswer) {
+      catchupHtml = `
+        <div class="catchup-area">
+          <label>✎ Submit your answer (catch-up)</label>
+          <textarea id="catchup-ta-${i}" placeholder="Type your answer here…"></textarea>
+          <div style="margin-top:.5rem">
+            <button class="btn-submit" style="font-size:.82rem;padding:.45rem 1rem" onclick="submitCatchup(${i})">Submit Answer</button>
+          </div>
+        </div>`;
+    } else if (!isAdmin && myAnswer) {
+      catchupHtml = `<div class="catchup-submitted">✓ You answered this question</div>`;
+    }
+    html += `
+      <div class="prev-q-card">
+        <div class="prev-q-header" onclick="togglePrev(${i})">
+          <span class="prev-q-title">Q${i+1}: ${esc(qText.length > 72 ? qText.slice(0,72)+'…' : qText)}</span>
+          <span class="prev-q-toggle" id="ptog-${i}">▼ ${responses.length} response${responses.length!==1?'s':''}${hasReveal ? ' · ◈' : ''}${missedBadge}</span>
+        </div>
+        <div class="prev-q-body" id="pbody-${i}">
+          ${buildRevealHtml(i)}
+          ${catchupHtml}
+          <div style="margin-top:${(hasReveal || catchupHtml) ?'1rem':'0'}">
+            ${responses.length === 0 ? '<div class="no-responses">No responses yet.</div>' : responses.map(responseCard).join('')}
+          </div>
+        </div>
+      </div>`;
+  }
+  html += '</div>';
+  block.innerHTML = html;
+}
+
+window.togglePrev = (i) => {
+  const body = document.getElementById(`pbody-${i}`);
+  const tog = document.getElementById(`ptog-${i}`);
+  body.classList.toggle('open');
+  const open = body.classList.contains('open');
+  const cnt = getResponsesForQ(i).length;
+  const hr = !!QUESTIONS[i].reveal;
+  tog.textContent = `${open?'▲':'▼'} ${cnt} response${cnt!==1?'s':''}${hr?' · ◈':''}`;
+};
+
+function responseCard(r) {
+  const mine = r.user === userName;
+  return `<div class="response-card ${mine?'mine':''}">
+    <div class="response-meta">
+      <span class="response-name ${mine?'mine-label':''}">${mine ? '◈ You' : esc(r.user)}</span>
+      <span class="response-time">${r.timestamp ? fmtTime(r.timestamp) : ''}</span>
+    </div>
+    <div class="response-text">${esc(r.text)}</div>
+  </div>`;
+}
+
+window.submitAnswer = async () => {
+  const ta = document.getElementById('my-answer-ta');
+  const text = ta?.value.trim();
+  if (!text) return showToast('Please write an answer first');
+  const { doc, setDoc, serverTimestamp } = window._fs;
+  await setDoc(doc(db, 'sessions', sessionId, 'answers', `q${currentQuestionIndex}_${userName}`), {
+    questionIndex: currentQuestionIndex, user: userName, text, timestamp: serverTimestamp()
+  });
+  showToast('✓ Answer submitted');
+};
+
+window.editAnswer = async () => {
+  const { doc, deleteDoc } = window._fs;
+  await deleteDoc(doc(db, 'sessions', sessionId, 'answers', `q${currentQuestionIndex}_${userName}`));
+  showToast('Answer cleared — you can resubmit');
+};
+
+window.submitCatchup = async (qi) => {
+  const ta = document.getElementById(`catchup-ta-${qi}`);
+  const text = ta?.value.trim();
+  if (!text) return showToast('Please write an answer first');
+  const { doc, setDoc, serverTimestamp } = window._fs;
+  await setDoc(doc(db, 'sessions', sessionId, 'answers', `q${qi}_${userName}`), {
+    questionIndex: qi, user: userName, text, timestamp: serverTimestamp()
+  });
+  showToast('✓ Catch-up answer submitted');
+  renderPreviousQuestions();
+};
+
+window.advanceQuestion = async () => {
+  const next = currentQuestionIndex + 1;
+  if (next > QUESTIONS.length) return showToast('No more questions!');
+  const { updateDoc } = window._fs;
+  await updateDoc(sessionRef, { currentQuestion: next });
+  showToast(next >= QUESTIONS.length ? '// Session complete' : `▶ Advanced to Q${next + 1}`);
+};
+
+window.confirmReset = () => {
+  document.getElementById('confirm-title').textContent = 'Reset All Data';
+  document.getElementById('confirm-msg').textContent = 'This deletes ALL answers and restarts from Question 1.';
+  document.getElementById('confirm-code').value = '';
+  document.getElementById('confirm-modal').classList.add('open');
+  document.getElementById('confirm-btn').onclick = async () => {
+    if (document.getElementById('confirm-code').value !== ADMIN_CODE) return showToast('Wrong code');
+    await resetAll(); closeModal();
+  };
+};
+
+async function resetAll() {
+  const { collection, getDocs, deleteDoc, updateDoc, doc } = window._fs;
+  const snap = await getDocs(collection(db, 'sessions', sessionId, 'answers'));
+  await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'sessions', sessionId, 'answers', d.id))));
+  await updateDoc(sessionRef, { currentQuestion: 0 });
+  document.getElementById('reveal-zone').innerHTML = '';
+  showToast('⟳ Session reset');
+}
+
+function pdfHeader(jdoc, title, sub) {
+  const W = jdoc.internal.pageSize.getWidth();
+  jdoc.setFillColor(26, 20, 9); jdoc.rect(0, 0, W, 68, 'F');
+  jdoc.setFillColor(61, 84, 38); jdoc.rect(0, 65, W, 3, 'F');
+  jdoc.setFont('helvetica', 'bold'); jdoc.setFontSize(17); jdoc.setTextColor(240, 234, 216);
+  jdoc.text(title, 40, 36);
+  jdoc.setFontSize(9); jdoc.setFont('helvetica', 'normal'); jdoc.setTextColor(138, 184, 74);
+  jdoc.text(sub, 40, 54);
+  jdoc.setTextColor(26, 20, 9); return 88;
+}
+
+function pdfText(jdoc, text, x, y, maxW, size, style, rgb) {
+  jdoc.setFontSize(size); jdoc.setFont('helvetica', style); jdoc.setTextColor(...rgb);
+  const pageH = jdoc.internal.pageSize.getHeight();
+  const lines = jdoc.splitTextToSize(String(text || ''), maxW);
+  lines.forEach(ln => {
+    if (y > pageH - 55) { jdoc.addPage(); y = 48; }
+    jdoc.text(ln, x, y); y += size * 1.5;
+  });
+  return y;
+}
+
+window.exportAllPDF = () => {
+  const { jsPDF } = window.jspdf;
+  const jdoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+  const W = jdoc.internal.pageSize.getWidth(); const M = 42;
+  let y = pdfHeader(jdoc, 'Session Export — All Responses', `Session: ${sessionId}   ·   ${new Date().toLocaleString()}`);
+  for (let qi = 0; qi < QUESTIONS.length; qi++) {
+    const responses = getResponsesForQ(qi);
+    if (y > jdoc.internal.pageSize.getHeight() - 90) { jdoc.addPage(); y = 48; }
+    jdoc.setFillColor(212, 232, 194); jdoc.rect(M, y - 13, W - M * 2, 21, 'F');
+    y = pdfText(jdoc, `Q${qi+1}: ${QUESTIONS[qi].text}`, M + 6, y, W - M*2-12, 10.5, 'bold', [26,20,9]);
+    y += 4;
+    if (responses.length === 0) {
+      y = pdfText(jdoc, 'No responses.', M + 10, y, W-M*2-20, 9, 'italic', [100,115,90]);
+    } else {
+      responses.forEach(r => {
+        y = pdfText(jdoc, r.user + ':', M + 10, y, W-M*2-20, 9, 'bold', [61,84,38]);
+        y = pdfText(jdoc, r.text, M + 22, y, W-M*2-32, 9.5, 'normal', [40,50,30]);
+        y += 2;
+      });
+    }
+    y += 10;
+  }
+  jdoc.save(`living-world-${sessionId}-all.pdf`);
+  showToast('⬇ All responses PDF downloaded');
+};
+
+window.exportByStudentPDF = () => {
+  const byUser = {};
+  Object.values(allAnswers).sort((a,b) => a.questionIndex - b.questionIndex).forEach(r => {
+    if (!byUser[r.user]) byUser[r.user] = [];
+    byUser[r.user].push(r);
+  });
+  if (!Object.keys(byUser).length) return showToast('No answers to export yet');
+  const { jsPDF } = window.jspdf;
+  const jdoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+  const W = jdoc.internal.pageSize.getWidth(); const M = 42; let first = true;
+  Object.entries(byUser).forEach(([user, answers]) => {
+    if (!first) jdoc.addPage(); first = false;
+    let y = pdfHeader(jdoc, `Student: ${user}`, `Session: ${sessionId}   ·   ${new Date().toLocaleString()}`);
+    answers.forEach(r => {
+      if (y > jdoc.internal.pageSize.getHeight() - 90) { jdoc.addPage(); y = 48; }
+      const qText = QUESTIONS[r.questionIndex]?.text || `Question ${r.questionIndex + 1}`;
+      jdoc.setFillColor(212, 232, 194); jdoc.rect(M, y - 13, W - M * 2, 21, 'F');
+      y = pdfText(jdoc, `Q${r.questionIndex+1}: ${qText}`, M + 6, y, W-M*2-12, 10, 'bold', [26,20,9]);
+      y += 3;
+      y = pdfText(jdoc, r.text, M + 10, y, W-M*2-20, 10, 'normal', [40,50,30]);
+      y += 12;
+    });
+  });
+  jdoc.save(`living-world-${sessionId}-by-student.pdf`);
+  showToast('⬇ Per-student PDF downloaded');
+};
+
+window.exportMyAnswersPDF = () => {
+  const myAnswers = Object.values(allAnswers).filter(r => r.user === userName).sort((a,b) => a.questionIndex - b.questionIndex);
+  if (!myAnswers.length) return showToast("You haven't submitted any answers yet");
+  const { jsPDF } = window.jspdf;
+  const jdoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+  const W = jdoc.internal.pageSize.getWidth(); const M = 42;
+  let y = pdfHeader(jdoc, `My Answers — ${userName}`, `Session: ${sessionId}   ·   ${new Date().toLocaleString()}`);
+  myAnswers.forEach(r => {
+    if (y > jdoc.internal.pageSize.getHeight() - 90) { jdoc.addPage(); y = 48; }
+    const qText = QUESTIONS[r.questionIndex]?.text || `Question ${r.questionIndex + 1}`;
+    jdoc.setFillColor(212, 232, 194); jdoc.rect(M, y - 13, W - M * 2, 21, 'F');
+    y = pdfText(jdoc, `Q${r.questionIndex+1}: ${qText}`, M + 6, y, W-M*2-12, 10, 'bold', [26,20,9]);
+    y += 3;
+    y = pdfText(jdoc, r.text, M + 10, y, W-M*2-20, 10, 'normal', [40,50,30]);
+    y += 14;
+  });
+  jdoc.save(`my-answers-${userName.replace(/\s+/g,'-')}-${sessionId}.pdf`);
+  showToast('⬇ Your answers PDF downloaded');
+};
+
+window.exportClassAnswersPDF = () => {
+  const { jsPDF } = window.jspdf;
+  const jdoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+  const W = jdoc.internal.pageSize.getWidth(); const M = 42;
+  let y = pdfHeader(jdoc, 'All Class Responses', `Session: ${sessionId}   ·   ${new Date().toLocaleString()}`);
+  for (let qi = 0; qi < QUESTIONS.length; qi++) {
+    const responses = getResponsesForQ(qi);
+    if (responses.length === 0) continue;
+    if (y > jdoc.internal.pageSize.getHeight() - 90) { jdoc.addPage(); y = 48; }
+    jdoc.setFillColor(212, 232, 194); jdoc.rect(M, y - 13, W - M * 2, 21, 'F');
+    y = pdfText(jdoc, `Q${qi+1}: ${QUESTIONS[qi].text}`, M + 6, y, W-M*2-12, 10.5, 'bold', [26,20,9]);
+    y += 4;
+    responses.forEach(r => {
+      const isMe = r.user === userName;
+      y = pdfText(jdoc, `${r.user}${isMe?' (me)':''}:`, M + 10, y, W-M*2-20, 9, 'bold', isMe ? [61,84,38] : [60,75,50]);
+      y = pdfText(jdoc, r.text, M + 22, y, W-M*2-32, 9.5, 'normal', [40,50,30]);
+      y += 2;
+    });
+    y += 10;
+  }
+  jdoc.save(`class-answers-${sessionId}.pdf`);
+  showToast('⬇ Class answers PDF downloaded');
+};
+
+function getResponsesForQ(idx) {
+  return Object.values(allAnswers)
+    .filter(a => a.questionIndex === idx)
+    .sort((a,b) => (a.timestamp?.seconds||0) - (b.timestamp?.seconds||0));
+}
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts.seconds * 1000);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+let _toastT;
+window.showToast = (msg) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_toastT); _toastT = setTimeout(() => t.classList.remove('show'), 3200);
+};
+window.closeModal = () => document.getElementById('confirm-modal').classList.remove('open');
+</script>
+</body>
+</html>
